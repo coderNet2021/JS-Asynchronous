@@ -55,8 +55,8 @@ const renderCountry = function (data, neighbour = '') {
       <h3 class="country__name">${data.name}</h3>
       <h4 class="country__region">${data.region}</h4>
       <p class="country__row"><span>👫</span>${(
-        +data.population / 1000000
-      ).toFixed(1)}</p>
+      +data.population / 1000000
+    ).toFixed(1)}</p>
       <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
       <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
     </div>
@@ -68,6 +68,7 @@ const renderErrorr = function (err) {
   countriesContainer.insertAdjacentText('beforeend', err);
   countriesContainer.style.opacity = 1;
 };
+/*
 //with console logs
 // const getCountryData = function (country) {
 //   const request = fetch(`https://restcountries.eu/rest/v2/name/${country}`)
@@ -173,3 +174,62 @@ wait(2).then(() => {
   console.log('i waited for 2 seconds');
   return wait(1);
 }).then(()=>{console.log('i waited for 1 seconds')})
+
+
+end of 255 video
+*/
+
+
+//offloaded his wok to the background - to the webApis in the browser
+// and move to the next line
+//navigator.geolocation.getCurrentPosition(position => console.log(position), err => console.error(err));
+
+// here we have a callback based API
+// we want to promisify , ya3ne to transform this callback based Api to 
+// to promise based api
+
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {// resolve hiyi medium to hold on data 
+    // to be passed to the resolved function , and that is needed to be outside the resolve. to be used later
+
+    // navigator.geolocation.getCurrentPosition(position => resolve(position), err => reject(err));
+    //also we can do the same:
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+
+  });
+}
+
+//try this out:
+//getPosition().then(pos => console.log(pos));
+//now we have promisify the geolocation API from callback Api based to promises based Api
+
+const whereAmI = function () {
+
+  getPosition().then(pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    return fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`)
+  })
+    .then(res => {
+      if (!res.ok) throw new Error(`problem with GeoCoding ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      console.log(data);
+      console.log(`you are in ${data.city} , ${data.country}`);
+      return fetch(`https://restcountries.eu/rest/v2/name/${data.country}`);
+    })
+    .then(res => {
+      if (!res.ok) throw new Error(`${errMessage} ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      renderCountry(data[0]);
+    })
+    .catch(err => console.error(`${err.message}`));
+};
+
+
+btn.addEventListener('click', whereAmI);
+
+
+console.log('Getting position');
